@@ -67,6 +67,15 @@ def update_message(id, new_msg):
     cursor.execute("UPDATE messages SET content=%s WHERE id=%s", (new_msg, id))
     db.commit()
     return f"Updated message {id} to: {new_msg}"
+@app.route('/dbcheck')
+def dbcheck():
+    try:
+        cursor.execute("SELECT 1;")
+        result = cursor.fetchone()
+        return f"Database connected! Test query returned: {result}"
+    except Exception as e:
+        return f"Database connection failed: {e}"
+
 
 # --- Run App ---
 if __name__ == '__main__':
