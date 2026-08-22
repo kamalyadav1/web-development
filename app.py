@@ -47,6 +47,12 @@ def send_message(msg):
     db.commit()
 
     return f"Message sent to Kafka and saved in MySQL: {msg}"
+@app.route('/medicines')
+def show_medicines():
+    cursor.execute("SELECT * FROM medicines;")
+    rows = cursor.fetchall()
+    return render_template('medicines.html', medicines=rows)
+    
 
 # Show all messages from MySQL
 @app.route('/messages')
