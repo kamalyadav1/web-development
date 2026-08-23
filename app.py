@@ -38,7 +38,7 @@ def get_db_connection():
         "port": int(os.environ.get("MYSQL_PORT", 14727)),
         "user": os.environ.get("MYSQL_USER", "avnadmin"),
         "password": os.environ.get("MYSQL_PASSWORD"),
-        "database": os.environ.get("MYSQL_DATABASE", "defaultdb"),
+        "database": os.environ.get("MYSQL_DATABASE", "medical_data"),
     }
 
     ssl_ca = os.environ.get("MYSQL_SSL_CA")
