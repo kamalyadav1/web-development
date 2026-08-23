@@ -35,7 +35,9 @@ def get_kafka_producer():
         return None
 
 
-producer = get_kafka_producer()
+# FIXED: Removed the global 'producer = get_kafka_producer()' execution from here.
+# This prevents initialization crashes from breaking your page loads.
+producer = None
 
 
 # --- Helper: MySQL Connection Initialization ---
@@ -69,9 +71,13 @@ def homes():
 def handle_signup():
     global producer
 
-    # FIXED: Changed from 'signin.html' to 'signup.html' to match your form file name
+    # Safe Template Rendering for GET requests
     if request.method == 'GET':
-        return render_template('signup.html')
+        try:
+            return render_template('signup.html')
+        except Exception as e:
+            print(f"Template rendering crash: {e}")
+            return f"Template Error: Ensure 'signup.html' exists in your 'templates/' folder. Details: {e}", 500
 
     # If the user clicks the "Sign Up" button (Form Submission)
     # 1. Capture user inputs from the HTML form 'name' attributes
@@ -84,7 +90,7 @@ def handle_signup():
         "dob": request.form.get("dob")
     }
 
-    # 2. Produce registration log data to Kafka
+    # 2. Produce registration log data to Kafka (Lazy Initialization)
     if not producer:
         producer = get_kafka_producer()
     if producer:
@@ -115,7 +121,6 @@ def handle_signup():
         cursor.close()
         db.close()
 
-        # Friendly feedback to the user on completion
         return "Sign-Up Complete! Your data has been successfully broadcast to Kafka and saved to MySQL."
 
     except Exception as db_err:
