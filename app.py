@@ -69,9 +69,9 @@ def homes():
 def handle_signup():
     global producer
 
-    # If the user just opens the URL normally in a browser
+    # FIXED: Changed from 'signin.html' to 'signup.html' to match your form file name
     if request.method == 'GET':
-        return render_template('signin.html')
+        return render_template('signup.html')
 
     # If the user clicks the "Sign Up" button (Form Submission)
     # 1. Capture user inputs from the HTML form 'name' attributes
