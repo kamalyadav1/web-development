@@ -64,17 +64,16 @@ def homes():
     return render_template('home.html')
 
 
-# Route to show the visual Form webpage
-@app.route('/sig')
-def signup_page():
-    return render_template('signin.html')
-
-
-# New POST endpoint to process the submitted Medical Sign-Up Data
-@app.route('/signup', methods=['POST'])
+# Unified Signup Route: Handles viewing the form (GET) and submitting data (POST)
+@app.route('/signup', methods=['GET', 'POST'])
 def handle_signup():
     global producer
 
+    # If the user just opens the URL normally in a browser
+    if request.method == 'GET':
+        return render_template('signin.html')
+
+    # If the user clicks the "Sign Up" button (Form Submission)
     # 1. Capture user inputs from the HTML form 'name' attributes
     form_data = {
         "full_name": request.form.get("fullName"),
