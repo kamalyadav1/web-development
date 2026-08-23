@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, flash
 from kafka import KafkaProducer
 import mysql.connector
 import os
@@ -6,16 +6,23 @@ import json
 import ssl
 
 app = Flask(__name__)
+# Added a secret key to support secure browser flash messaging
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_medical_key")
 
 
 # --- Helper: Kafka Producer Initialization ---
 def get_kafka_producer():
     try:
+        bootstrap_servers = os.environ.get("KAFKA_BOOTSTRAP_SERVERS")
+        if not bootstrap_servers:
+            print("Kafka configuration missing. Producer skipped.")
+            return None
+
         security_proto = os.environ.get("KAFKA_SECURITY_PROTOCOL", "SASL_SSL")
         ssl_ctx = ssl.create_default_context() if "SSL" in security_proto else None
 
         return KafkaProducer(
-            bootstrap_servers=os.environ.get("KAFKA_BOOTSTRAP_SERVERS"),
+            bootstrap_servers=bootstrap_servers,
             security_protocol=security_proto,
             sasl_mechanism=os.environ.get("KAFKA_SASL_MECHANISM", "PLAIN"),
             sasl_plain_username=os.environ.get("KAFKA_USERNAME", "avnadmin"),
@@ -57,24 +64,77 @@ def homes():
     return render_template('home.html')
 
 
+# Route to show the visual Form webpage
 @app.route('/sig')
-def signup():
+def signup_page():
     return render_template('signin.html')
 
 
-# Send message to Kafka and save to MySQL
+# New POST endpoint to process the submitted Medical Sign-Up Data
+@app.route('/signup', methods=['POST'])
+def handle_signup():
+    global producer
+
+    # 1. Capture user inputs from the HTML form 'name' attributes
+    form_data = {
+        "full_name": request.form.get("fullName"),
+        "medical_name": request.form.get("medicalName"),
+        "pan_number": request.form.get("panNumber"),
+        "license_number": request.form.get("licenseNumber"),
+        "address": request.form.get("address"),
+        "dob": request.form.get("dob")
+    }
+
+    # 2. Produce registration log data to Kafka
+    if not producer:
+        producer = get_kafka_producer()
+    if producer:
+        try:
+            producer.send('lakhan-medical', value={"event": "user_signup", "data": form_data})
+            producer.flush()
+        except Exception as kafka_err:
+            print(f"Kafka logging failed: {kafka_err}")
+
+    # 3. Securely Insert records into your MySQL table
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+
+        sql = """INSERT INTO medical_users (full_name, medical_name, pan_number, license_number, address, dob) 
+                 VALUES (%s, %s, %s, %s, %s, %s)"""
+        values = (
+            form_data["full_name"],
+            form_data["medical_name"],
+            form_data["pan_number"],
+            form_data["license_number"],
+            form_data["address"],
+            form_data["dob"]
+        )
+
+        cursor.execute(sql, values)
+        db.commit()
+        cursor.close()
+        db.close()
+
+        # Friendly feedback to the user on completion
+        return "Sign-Up Complete! Your data has been successfully broadcast to Kafka and saved to MySQL."
+
+    except Exception as db_err:
+        print(f"MySQL Error: {db_err}")
+        return f"Database error encountered: {db_err}", 500
+
+
+# Legacy tracking test endpoint preserved
 @app.route('/send/<msg>')
 def send_message(msg):
     global producer
     if not producer:
         producer = get_kafka_producer()
 
-    # Produce to Kafka
     if producer:
         producer.send('lakhan-medical', value={"message": msg})
         producer.flush()
 
-    # Insert into MySQL table
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute("INSERT INTO messages (content) VALUES (%s)", (msg,))

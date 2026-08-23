@@ -9,47 +9,47 @@
 <body>
   <div class="container mt-5">
     <h2 class="text-center mb-4">Medical Sign-Up Form</h2>
-    <form class="needs-validation" novalidate>
+    <form class="needs-validation" action="/signup" method="POST" novalidate>
 
       <!-- Name -->
       <div class="mb-3">
         <label for="name" class="form-label">Full Name</label>
-        <input type="text" class="form-control" id="name" required>
+        <input type="text" class="form-control" id="name" name="fullName" required>
         <div class="invalid-feedback">Please enter your name.</div>
       </div>
 
       <!-- Medical Name -->
       <div class="mb-3">
         <label for="medicalName" class="form-label">Medical Name</label>
-        <input type="text" class="form-control" id="medicalName" required>
+        <input type="text" class="form-control" id="medicalName" name="medicalName" required>
         <div class="invalid-feedback">Please enter medical name.</div>
       </div>
 
       <!-- PAN Number -->
       <div class="mb-3">
         <label for="pan" class="form-label">PAN Number</label>
-        <input type="text" class="form-control" id="pan" required>
+        <input type="text" class="form-control" id="pan" name="panNumber" required>
         <div class="invalid-feedback">Please enter PAN number.</div>
       </div>
 
       <!-- License Number -->
       <div class="mb-3">
         <label for="license" class="form-label">License Number</label>
-        <input type="text" class="form-control" id="license" required>
+        <input type="text" class="form-control" id="license" name="licenseNumber" required>
         <div class="invalid-feedback">Please enter license number.</div>
       </div>
 
       <!-- Address -->
       <div class="mb-3">
         <label for="address" class="form-label">Address</label>
-        <textarea class="form-control" id="address" rows="3" required></textarea>
+        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
         <div class="invalid-feedback">Please enter your address.</div>
       </div>
 
       <!-- Date of Birth -->
       <div class="mb-3">
         <label for="dob" class="form-label">Date of Birth</label>
-        <input type="date" class="form-control" id="dob" required>
+        <input type="date" class="form-control" id="dob" name="dob" required>
         <div class="invalid-feedback">Please select your date of birth.</div>
       </div>
 
