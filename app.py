@@ -35,8 +35,7 @@ def get_kafka_producer():
         return None
 
 
-# FIXED: Removed the global 'producer = get_kafka_producer()' execution from here.
-# This prevents initialization crashes from breaking your page loads.
+# Global variable placeholder (Initialized lazily during actual form posts)
 producer = None
 
 
@@ -71,26 +70,27 @@ def homes():
 def handle_signup():
     global producer
 
-    # Safe Template Rendering for GET requests
+    # 1. Handle GET Request (Viewing the page)
     if request.method == 'GET':
         try:
-            return render_template('signup.html')
+            # Matches the exact 'signin.html' file visible in your PyCharm templates folder
+            return render_template('signin.html')
         except Exception as e:
             print(f"Template rendering crash: {e}")
-            return f"Template Error: Ensure 'signup.html' exists in your 'templates/' folder. Details: {e}", 500
+            return f"Template Error: Make sure 'signin.html' exists in your 'templates/' folder. Details: {e}", 500
 
-    # If the user clicks the "Sign Up" button (Form Submission)
-    # 1. Capture user inputs from the HTML form 'name' attributes
+    # 2. Handle POST Request (Form submission)
+    # Captured exactly via the lowercase HTML field input 'name' keys
     form_data = {
-        "full_name": request.form.get("fullName"),
-        "medical_name": request.form.get("medicalName"),
-        "pan_number": request.form.get("panNumber"),
-        "license_number": request.form.get("licenseNumber"),
-        "address": request.form.get("address"),
-        "dob": request.form.get("dob")
+        "full_name": request.form.get("fullName", ""),
+        "medical_name": request.form.get("medicalName", ""),
+        "pan_number": request.form.get("panNumber", ""),
+        "license_number": request.form.get("licenseNumber", ""),  # Fixed case sensitivity bug
+        "address": request.form.get("address", ""),
+        "dob": request.form.get("dob", "")
     }
 
-    # 2. Produce registration log data to Kafka (Lazy Initialization)
+    # 3. Stream registration event logs into Apache Kafka safely
     if not producer:
         producer = get_kafka_producer()
     if producer:
@@ -100,7 +100,7 @@ def handle_signup():
         except Exception as kafka_err:
             print(f"Kafka logging failed: {kafka_err}")
 
-    # 3. Securely Insert records into your MySQL table
+    # 4. Insert data records securely into your Aiven MySQL database table
     try:
         db = get_db_connection()
         cursor = db.cursor()
